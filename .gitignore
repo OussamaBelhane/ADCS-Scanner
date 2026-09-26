@@ -1,0 +1,13 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.venv/
+env/
+venv/
+
+# Audit reports (keep test runs private)
+*.json
+demo_adcs_audit_report.json

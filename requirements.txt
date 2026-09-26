@@ -1,0 +1,5 @@
+# Core Active Directory LDAP Communication
+ldap3>=2.9.1
+
+# Cross-Platform Aesthetic Terminal Formatting
+colorama>=0.4.6
