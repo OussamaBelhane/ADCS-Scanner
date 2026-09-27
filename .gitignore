@@ -1,14 +1,32 @@
-# Python bytecode & cache
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-.pytest_cache/
 
-# Environment
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments & Virtualenvs
 .venv/
 env/
 venv/
+ENV/
 
-# Audit reports (keep test runs private)
+# Local target configuration & saved credentials (CRITICAL: NEVER COMMIT)
+targets.json
+
+# Generated audit reports and scan artifacts (KEEP SCAN RUNS PRIVATE)
 *.json
-demo_adcs_audit_report.json
+*.html
+*.cypher
+*.xml
+*.clixml
+remediate_*.ps1
+remediate_esc1.ps1
+ADCS_Remediation_Backup_*/
+
+# Local scratch / experimental learning scripts
+my_scanner.py
+scratch/
