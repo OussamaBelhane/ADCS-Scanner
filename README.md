@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![CI Pipeline](https://github.com/OussamaBelhane/ADCS-ESC1-Scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/OussamaBelhane/ADCS-ESC1-Scanner/actions)
+[![CI Pipeline](https://github.com/OussamaBelhane/ADCS-Scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/OussamaBelhane/ADCS-Scanner/actions)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![Tests](https://img.shields.io/badge/Tests-Pytest%20Passing-brightgreen.svg)](tests/)
 [![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-T1649-red.svg)](https://attack.mitre.org/techniques/T1649/)
@@ -103,8 +103,8 @@ Low-Privilege User ──► Requests Cert (SAN: Administrator) ──► Obtain
 
 ### 1. Clone the Repository & Install Dependencies
 ```bash
-git clone https://github.com/OussamaBelhane/ADCS-ESC1-Scanner.git
-cd ADCS-ESC1-Scanner
+git clone https://github.com/OussamaBelhane/ADCS-Scanner.git
+cd ADCS-Scanner
 pip install -r requirements.txt
 ```
 
