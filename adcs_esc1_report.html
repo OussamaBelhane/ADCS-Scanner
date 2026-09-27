@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AD CS ESC1 Security Audit Report - invictus.local</title>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --surface: #111827;
+            --surface-card: #1f2937;
+            --border: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.12);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.12);
+            --success: #10b981;
+            --cyan: #06b6d4;
+            --purple: #a855f7;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg);
+            color: var(--text-primary);
+            font-family: var(--font);
+            line-height: 1.6;
+            padding: 30px 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+            border: 1px solid #4338ca;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; }
+        .header h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .header p { color: var(--text-secondary); font-size: 14px; }
+        .badges { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .badge {
+            padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .badge-crit { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
+        .badge-warn { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+        .badge-mitre { background: rgba(168, 85, 247, 0.15); color: var(--purple); border: 1px solid var(--purple); }
+        .badge-admin { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .badge-user { background: rgba(156, 163, 175, 0.15); color: #cbd5e1; }
+        .badge-ca { background: rgba(6, 182, 212, 0.15); color: var(--cyan); border: 1px solid var(--cyan); margin-right: 5px; }
+        .badge-dormant { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #475569; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .metric-card .title { font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric-card .value { font-size: 30px; font-weight: 800; margin: 5px 0; }
+        .metric-card .subtitle { font-size: 12px; color: var(--text-secondary); }
+
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .section-title {
+            font-size: 18px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid var(--border); padding-bottom: 10px;
+        }
+        
+        .attack-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 15px 5px;
+        }
+        .flow-step {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 170px;
+            flex: 1;
+            text-align: center;
+        }
+        .flow-step.crit { border-color: var(--danger); background: var(--danger-bg); }
+        .flow-arrow { font-size: 20px; color: var(--cyan); font-weight: bold; }
+        .flow-num { font-size: 11px; font-weight: 700; color: var(--cyan); text-transform: uppercase; }
+        .flow-title { font-size: 13px; font-weight: 700; margin: 4px 0; }
+        .flow-desc { font-size: 11px; color: var(--text-secondary); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th { text-align: left; padding: 12px; background: var(--surface-card); color: var(--text-secondary); font-size: 12px; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:hover { background: rgba(255, 255, 255, 0.02); }
+        code { background: #000; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 12px; }
+        
+        .text-danger { color: var(--danger); }
+        .text-warning { color: var(--warning); }
+        .text-success { color: var(--success); }
+        .text-muted { color: var(--text-secondary); }
+        .desc-leaked { color: #facc15; font-weight: 600; background: rgba(250, 204, 21, 0.1); padding: 2px 6px; border-radius: 4px; }
+
+        .remediation-box {
+            background: #022c22;
+            border: 1px solid #059669;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        .remediation-box h4 { color: #34d399; margin-bottom: 8px; }
+        .code-block {
+            background: #030712;
+            border: 1px solid #1f2937;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            color: #a7f3d0;
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <h1>🛡️ Active Directory Certificate Services (AD CS) Security Audit</h1>
+                    <p>Enterprise Vulnerability Assessment & Privilege Escalation Analysis (ESC1)</p>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: var(--text-secondary);">Target Domain Controller</div>
+                    <div style="font-size: 16px; font-weight: bold; color: var(--cyan);">192.168.181.129 (invictus.local)</div>
+                </div>
+            </div>
+            <div class="badges">
+                <span class="badge badge-crit" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: #ef4444;">Risk Posture: CRITICAL (CVSS 9.8)</span>
+                <span class="badge badge-mitre">MITRE ATT&CK: T1649 (Forged PKI Certificates)</span>
+                <span class="badge badge-warn">Audit Scope: Active Directory Forest Root</span>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="title">Active ESC1 Exploits</div>
+                <div class="value text-danger">2</div>
+                <div class="subtitle">Enrollee Supplies SAN & Client Auth</div>
+            </div>
+            <div class="metric-card">
+                <div class="title">Total Evaluated Templates</div>
+                <div class="value" style="color: var(--cyan);">34</div>
+                <div class="subtitle">Discovered in AD Configuration Schema</div>
+            </div>
+            <div class="metric-card">
+                <div class="title">Admin Accounts (Targets)</div>
+                <div class="value" style="color: #f87171;">3</div>
+                <div class="subtitle">adminCount = 1 (Impersonation targets)</div>
+            </div>
+            <div class="metric-card">
+                <div class="title">Audit Timestamp</div>
+                <div class="value" style="font-size: 16px; margin: 12px 0; color: #cbd5e1;">2026-09-27 13:32:38 UTC</div>
+                <div class="subtitle">Auditor: Oussama Belhane</div>
+            </div>
+        </div>
+
+        <!-- Attack Chain Flowchart -->
+        <div class="section">
+            <div class="section-title">⚡ Attack Narrative: ESC1 Privilege Escalation Chain</div>
+            <div class="attack-flow">
+                <div class="flow-step">
+                    <div class="flow-num">Step 1</div>
+                    <div class="flow-title">Low-Priv Access</div>
+                    <div class="flow-desc">Standard domain user (e.g. <code>john</code>) with no special rights.</div>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step crit">
+                    <div class="flow-num">Step 2</div>
+                    <div class="flow-title">Enroll in ESC1</div>
+                    <div class="flow-desc">Requests cert specifying <code>SAN: Administrator</code>.</div>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">
+                    <div class="flow-num">Step 3</div>
+                    <div class="flow-title">CA Issues Cert</div>
+                    <div class="flow-desc">Enterprise CA signs cert with requested Administrator identity.</div>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">
+                    <div class="flow-num">Step 4</div>
+                    <div class="flow-title">PKINIT Kerberos</div>
+                    <div class="flow-desc">Authenticate to KDC via certificate to obtain Admin TGT.</div>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step crit">
+                    <div class="flow-num">Step 5</div>
+                    <div class="flow-title">Domain Takeover</div>
+                    <div class="flow-desc">Full Domain Administrator access (Pass-The-Ticket / DCSync).</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vulnerability Table -->
+        <div class="section">
+            <div class="section-title">🚨 Active Exploitable Templates (ESC1)</div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+                These templates are published by an active Enterprise CA, allow enrollees to supply an arbitrary Subject Alternative Name (SAN), permit Client Authentication, and require no manager approval.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Certificate Template</th>
+                        <th>Published On CA</th>
+                        <th>Misconfiguration Flag</th>
+                        <th>EKU Purposes</th>
+                        <th>DACL Enrollees (Permissions)</th>
+                        <th>Severity / Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+            <tr>
+                <td><strong class="text-danger">SubCA</strong><br><small class="text-muted">Subordinate Certification Authority</small></td>
+                <td><span class="badge badge-ca">invictus-DC01-CA</span></td>
+                <td><code>0x1</code> (Enrollee Supplies SAN)</td>
+                <td><span class="text-warning">All Purposes (Wildcard/SubCA)</span></td>
+                <td><span class="badge badge-user" style="font-size:10px; margin-right:3px;">Domain Admins</span><span class="badge badge-user" style="font-size:10px; margin-right:3px;">Enterprise Admins</span></td>
+                <td><span class="badge badge-warn">ADMIN ONLY</span></td>
+            </tr>
+            <tr>
+                <td><strong class="text-danger">ESC1-Vulnerable</strong><br><small class="text-muted">ESC1-Vulnerable</small></td>
+                <td><span class="badge badge-ca">invictus-DC01-CA</span></td>
+                <td><code>0x1</code> (Enrollee Supplies SAN)</td>
+                <td><span class="text-warning">Client Authentication</span></td>
+                <td><span class="badge badge-user" style="font-size:10px; margin-right:3px;">Domain Admins</span><span class="badge badge-crit" style="font-size:10px; margin-right:3px;">Domain Users</span><span class="badge badge-user" style="font-size:10px; margin-right:3px;">Enterprise Admins</span><span class="badge badge-crit" style="font-size:10px; margin-right:3px;">Authenticated Users</span><span class="badge badge-user" style="font-size:10px; margin-right:3px;">Administrator</span></td>
+                <td><span class="badge badge-crit">P1 / EXPLOITABLE</span></td>
+            </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Inactive Misconfigurations -->
+        <div class="section">
+            <div class="section-title">⚠️ Inactive Schema Misconfigurations (Dormant Flaws)</div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+                These templates have ESC1 configuration flaws in the Active Directory schema, but are currently <strong>not published</strong> on any active Certification Authority. If an administrator publishes them, they become immediately exploitable.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Certificate Template</th>
+                        <th>CA Publication Status</th>
+                        <th>Schema Flags</th>
+                        <th>EKU Purposes</th>
+                        <th>Risk Assessment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+            <tr>
+                <td><strong>CA</strong><br><small class="text-muted">Root Certification Authority</small></td>
+                <td><span class="badge badge-dormant">Not Published on any CA</span></td>
+                <td><code>0x1</code></td>
+                <td>All Purposes (Wildcard/SubCA)</td>
+                <td><span class="badge badge-warn">Schema Flaw (Dormant)</span></td>
+            </tr>
+            <tr>
+                <td><strong>OfflineRouter</strong><br><small class="text-muted">Router (Offline request)</small></td>
+                <td><span class="badge badge-dormant">Not Published on any CA</span></td>
+                <td><code>0x1</code></td>
+                <td>Client Authentication</td>
+                <td><span class="badge badge-warn">Schema Flaw (Dormant)</span></td>
+            </tr>
+            <tr>
+                <td><strong>CrossCA</strong><br><small class="text-muted">Cross Certification Authority</small></td>
+                <td><span class="badge badge-dormant">Not Published on any CA</span></td>
+                <td><code>0x1</code></td>
+                <td>All Purposes (Wildcard/SubCA)</td>
+                <td><span class="badge badge-warn">Schema Flaw (Dormant)</span></td>
+            </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Directory Recon -->
+        <div class="section">
+            <div class="section-title">👥 Active Directory User Reconnaissance & Target Mapping</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Display Name</th>
+                        <th>Privilege Tier</th>
+                        <th>Description / Credentials Found</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr class="row-highlight">
+            <td><strong class="text-danger">👑 Administrator</strong></td>
+            <td>None</td>
+            <td><span class="badge badge-admin">Domain Admin (adminCount=1)</span></td>
+            <td><span class="desc-text">Built-in account for administering the computer/domain</span></td>
+        </tr>
+        <tr class="row-highlight">
+            <td><strong class="text-danger">👑 krbtgt</strong></td>
+            <td>None</td>
+            <td><span class="badge badge-admin">Domain Admin (adminCount=1)</span></td>
+            <td><span class="desc-text">Key Distribution Center Service Account</span></td>
+        </tr>
+        <tr class="row-highlight">
+            <td><strong class="text-danger">👑 diana.prince</strong></td>
+            <td>None</td>
+            <td><span class="badge badge-admin">Domain Admin (adminCount=1)</span></td>
+            <td><span class="desc-text">None</span></td>
+        </tr>
+            <tr>
+                <td><strong>Guest</strong></td>
+                <td>None</td>
+                <td><span class="badge badge-user">Standard User</span></td>
+                <td><span class="desc-leaked">⚠️ Built-in account for guest access to the computer/domain</span></td>
+            </tr>
+            <tr>
+                <td><strong>john</strong></td>
+                <td>None</td>
+                <td><span class="badge badge-user">Standard User</span></td>
+                <td><span class="desc-leaked">⚠️ None</span></td>
+            </tr>
+            <tr>
+                <td><strong>sarah.connor</strong></td>
+                <td>None</td>
+                <td><span class="badge badge-user">Standard User</span></td>
+                <td><span class="desc-leaked">⚠️ None</span></td>
+            </tr>
+            <tr>
+                <td><strong>michael.scott</strong></td>
+                <td>None</td>
+                <td><span class="badge badge-user">Standard User</span></td>
+                <td><span class="desc-leaked">⚠️ None</span></td>
+            </tr>
+            <tr>
+                <td><strong>oliver.queen</strong></td>
+                <td>None</td>
+                <td><span class="badge badge-user">Standard User</span></td>
+                <td><span class="desc-leaked">⚠️ None</span></td>
+            </tr>
+            <tr>
+                <td><strong>svc_mssql</strong></td>
+                <td>None</td>
+                <td><span class="badge badge-user">Standard User</span></td>
+                <td><span class="desc-leaked">⚠️ None</span></td>
+            </tr>
+            <tr>
+                <td><strong>clark.kent</strong></td>
+                <td>None</td>
+                <td><span class="badge badge-user">Standard User</span></td>
+                <td><span class="desc-leaked">⚠️ Initial temporary password assigned: KryptonPass2026! (Please change)</span></td>
+            </tr>
+            <tr>
+                <td><strong>barry.allen</strong></td>
+                <td>None</td>
+                <td><span class="badge badge-user">Standard User</span></td>
+                <td><span class="desc-leaked">⚠️ None</span></td>
+            </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BloodHound Graph & Cypher Queries -->
+        <div class="section">
+            <div class="section-title">🩸 BloodHound Attack Graph & Cypher Query Modeling</div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+                Exported attack graph models connecting enrolled Active Directory principals, vulnerable templates (<code>CanEnroll</code>), and privilege escalation paths to Domain Admins.
+            </p>
+            <div style="background: #030712; border: 1px solid #1f2937; border-radius: 8px; padding: 15px; font-family: Consolas, monospace; font-size: 12px; color: #38bdf8;">
+                <div style="color: #94a3b8; margin-bottom: 6px;">// BloodHound / Neo4j Cypher Query to find exploitable AD CS paths:</div>
+                MATCH p=(g:Group)-[:CanEnroll]-&gt;(t:CertTemplate)-[:PublishedTo]-&gt;(ca:EnterpriseCA) WHERE t.enrolleesuppliessubject = true RETURN p;
+            </div>
+        </div>
+
+        <!-- Remediation & Telemetry -->
+        <div class="section">
+            <div class="section-title">🛡️ Blue Team Hardening & Detection Telemetry</div>
+            <div class="remediation-box">
+                <h4>Option 1: Automated PowerShell Remediation (Recommended)</h4>
+                <p style="font-size: 13px; color: #a7f3d0;">
+                    Execute the automatically generated <code>remediate_esc1.ps1</code> script with Domain Administrator privileges to strip <code>CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT</code> (0x1) while creating safety backups.
+                </p>
+                <div class="code-block">
+powershell.exe -ExecutionPolicy Bypass -File .emediate_esc1.ps1
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h4 style="font-size: 14px; margin-bottom: 8px;">Option 2: Manual Certificate Template Manager Hardening</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">
+                    Open <code>certtmpl.msc</code> on the CA ➔ Right click the vulnerable template ➔ <strong>Properties</strong> ➔ <strong>Subject Name</strong> tab ➔ Change from <em>"Supply in the request"</em> to <em>"Build from this Active Directory information"</em>.
+                </p>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h4 style="font-size: 14px; margin-bottom: 8px;">Detection Telemetry (SIEM & Windows Event IDs)</h4>
+                <ul style="font-size: 13px; color: var(--text-secondary); margin-left: 20px;">
+                    <li><strong>Event ID 4886 (CA):</strong> Certificate Services received a certificate request (monitor for unexpected SAN submissions).</li>
+                    <li><strong>Event ID 4887 (CA):</strong> Certificate Services issued a certificate (monitor requests for Domain Admin SANs from standard user accounts).</li>
+                    <li><strong>Event ID 4768 (DC):</strong> A Kerberos TGT ticket was requested using a certificate (pre-authentication type 16 / PKINIT).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>AD CS ESC1 Vulnerability Scanner & Enterprise Auditor</strong></p>
+            <p>Author: <strong>Oussama Belhane</strong> | Master's PFE Engineering Portfolio | MITRE ATT&CK T1649</p>
+        </div>
+    </div>
+</body>
+</html>

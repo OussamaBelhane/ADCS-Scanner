@@ -3,3 +3,6 @@ ldap3>=2.9.1
 
 # Cross-Platform Aesthetic Terminal Formatting
 colorama>=0.4.6
+
+# Quality Assurance & Unit Testing
+pytest>=8.0.0

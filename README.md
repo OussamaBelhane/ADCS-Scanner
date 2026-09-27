@@ -1,7 +1,10 @@
 # 🛡️ ADCS ESC1 Vulnerability Scanner & PKI Auditor
 
-[![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI Pipeline](https://github.com/OussamaBelhane/ADCS-ESC1-Scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/OussamaBelhane/ADCS-ESC1-Scanner/actions)
+[![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![Tests](https://img.shields.io/badge/Tests-Pytest%20Passing-brightgreen.svg)](tests/)
 [![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-T1649-red.svg)](https://attack.mitre.org/techniques/T1649/)
 [![Focus](https://img.shields.io/badge/Focus-Active%20Directory%20PKI%20Audit-purple.svg)]()
 
@@ -82,13 +85,17 @@ Low-Privilege User ──► Requests Cert (SAN: Administrator) ──► Obtain
 
 ---
 
-## ✨ Features
+## ✨ Enterprise Engineering Features
 
-- 🎨 **Airgeddon-Inspired Terminal UI**: Sleek ANSI colored panels, progress indicators, and visual risk cards.
-- 🔍 **Automated LDAP/LDAPS Audit**: Queries the Active Directory `Configuration` naming context (`CN=Certificate Templates,CN=Public Key Services...`).
-- 🧮 **Bitwise Security Math**: Evaluates `msPKI-Certificate-Name-Flag` and `msPKI-Enrollment-Flag` against official Microsoft MS-CRTD specifications.
-- 📋 **Automated JSON Export**: Saves standardized audit artifacts for compliance reports and SIEM ingest.
-- 🧪 **Offline Demo Mode**: Test and showcase the scanner console interface anywhere with `--demo` (no live lab required!).
+- 🎮 **Interactive Security Console**: Menu-driven audit suite with persistent target profile management (`targets.json`).
+- 🔍 **Zero-False-Positive CA Verification**: Cross-references schema templates (`CN=Certificate Templates`) against active Enterprise CAs (`CN=Enrollment Services`), completely eliminating false alarms on dormant templates.
+- 🔐 **Low-Level Binary DACL Parsing (MS-DTYP)**: Directly unpacks raw Windows Security Descriptors (`nTSecurityDescriptor`) in pure Python. Inspects Access Control Entries (ACEs) for the **Certificate-Enrollment Extended Right GUID** (`0e10c968-78fb-11d2-90d4-00c04f79dc55`) to confirm whether unprivileged identities (`Domain Users`, `Authenticated Users`) actually have enrollment permissions.
+- 🩸 **BloodHound & Neo4j Integration**: Exports attack graph models (`adcs_bloodhound.json`) and executable Cypher queries (`adcs_attack_path.cypher`) mapping `(Group) -[CanEnroll]-> (Template) -[Abuse_ESC1_PKINIT]-> (Domain Admins)`.
+- 👥 **Domain Account Reconnaissance**: Enumerates directory accounts, flags high-value Domain Admin targets (`adminCount=1`), and highlights credential exposures in account descriptions.
+- 🧮 **Bitwise MS-CRTD Flag Analysis**: Evaluates `msPKI-Certificate-Name-Flag` (`0x1`) and `msPKI-Enrollment-Flag` (`0x2`) against Microsoft specifications.
+- 📊 **CISO Executive HTML Report**: Generates an executive-ready, modern dark-mode HTML assessment deliverable complete with attack chain visualization, risk scoring, and MITRE ATT&CK T1649 mapping.
+- 🛡️ **Automated PowerShell Remediation Engine**: Generates a safety-checked, rollback-ready PowerShell script (`remediate_esc1.ps1`) with automatic `.clixml` backups that administrators can run to strip vulnerable flags.
+- 📋 **Structured JSON Artifacts**: Exports complete machine-readable audit data (`adcs_esc1_report.json`) for SIEM, Splunk, or compliance ingestion.
 
 ---
 
@@ -101,31 +108,55 @@ cd ADCS-ESC1-Scanner
 pip install -r requirements.txt
 ```
 
-### 2. Instant Demo Mode (Showcase / Testing)
-Test the console interface and risk cards without needing an active Domain Controller:
+### 2. Interactive Console Mode (Recommended)
+Simply run the script with no arguments to launch the interactive audit console:
 ```bash
-python adcs_esc1_scanner.py --demo
+python adcs_esc1_scanner.py
+```
+From the interactive menu:
+- `[1]` List Domain Users & Identify Admin Targets
+- `[2]` Audit Certificate Templates (ESC1 with DACL Enrollment Rights)
+- `[3]` Full Comprehensive Audit (Users + Templates + HTML + BloodHound)
+- `[4]` Generate Hardened PowerShell Remediation Script (`remediate_esc1.ps1`)
+- `[5]` Export BloodHound Graph & Cypher Queries (`adcs_bloodhound.json`)
+- `[6]` Switch Target / Connect to Another Domain Controller
+
+### 3. CLI Mode (Automation / CI/CD)
+```bash
+# Full audit with HTML report, BloodHound export, and automated remediation script generation
+python adcs_esc1_scanner.py -dc 192.168.181.129 -d invictus.local -u john -p 'Password123!' --list-users --fix --html adcs_report.html --bloodhound adcs_bloodhound.json
+
+# Secure LDAPS scan (Port 636)
+python adcs_esc1_scanner.py -dc 192.168.181.129 -d invictus.local -u john -p 'Password123!' --ssl
 ```
 
-### 3. Scan a Live Domain Controller (LDAP / LDAPS)
+### 4. Dockerized Execution
+Run in an isolated container without local environment configuration:
 ```bash
-# Standard LDAP scan (Port 389)
-python adcs_esc1_scanner.py -dc 192.168.1.10 -d corporate.local -u jdoe -p 'Winter2026!'
+# Build the container
+docker build -t adcs-esc1-scanner .
 
-# Secure LDAPS scan (Port 636) with JSON report export
-python adcs_esc1_scanner.py -dc 192.168.1.10 -d corporate.local -u jdoe -p 'Winter2026!' --ssl -o corporate_adcs_audit.json
+# Run the audit
+docker run --rm -it adcs-esc1-scanner -dc 192.168.181.129 -d invictus.local -u john -p 'Password123!'
+```
+
+### 5. Automated Unit Tests (QA Suite)
+Run the built-in test suite to verify MS-CRTD bitwise logic and MS-DTYP DACL parsing:
+```bash
+pytest -v tests/
 ```
 
 ---
 
-## 🛡️ Blue Team Remediation (How to Fix ESC1)
+## 🛡️ Automated Remediation & Hardening
 
-To remediate vulnerable templates found by this tool:
-1. Open the **Certificate Templates Console** (`certtmpl.msc`) on the Certification Authority server.
-2. Right-click the vulnerable template and click **Properties**.
-3. Navigate to the **Subject Name** tab.
-4. Select **"Build from this Active Directory information"** instead of *"Supply in the request"*.
-5. Under the **Issuance Requirements** tab, consider checking **"CA certificate manager approval"** for high-privilege templates.
+When vulnerable ESC1 templates are detected, the tool automatically generates a hardened PowerShell script:
+```powershell
+# Run with Domain Admin rights to automatically strip CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT
+powershell.exe -ExecutionPolicy Bypass -File .\remediate_esc1.ps1
+```
+* **Safety First**: Creates timestamped `.clixml` backups of all modified Active Directory objects before applying changes.
+* **Verification**: Re-reads directory attributes post-change to confirm bitwise flags have been cleared.
 
 ---
 
