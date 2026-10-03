@@ -99,6 +99,35 @@ Low-Privilege User ──► Requests Cert (SAN: Administrator) ──► Obtain
 
 ---
 
+## 📂 Modular Architecture
+
+```text
+ADCS-Scanner/
+│
+├── core/                         # The Security Brain
+│   ├── constants.py              # Bitmasks (0x01), OIDs, GUIDs, and Well-Known SIDs
+│   ├── dacl_parser.py            # MS-DTYP binary Security Descriptor & DACL parser
+│   ├── ldap_client.py            # LDAP/LDAPS connection & Active Directory queries
+│   └── engine.py                 # The 4 Golden Conditions for ESC1 detection
+│
+├── reports/                      # Executive Output & Automation
+│   ├── html_reporter.py          # Dark-slate executive HTML dashboard with MITRE ATT&CK mapping
+│   ├── bloodhound_exporter.py    # BloodHound JSON graph & Neo4j Cypher queries
+│   └── remediator.py             # Automated PowerShell hardening script with CLIXML backups
+│
+├── ui/                           # Interactive User Interface
+│   └── console.py                # Colorama banners, saved targets menu, and result tables
+│
+├── tests/                        # Automated Pytest Suite
+│   └── test_scanner.py           # Bitwise logic, DACL decoding, and RID resolution tests
+│
+├── Dockerfile                    # Container definition
+├── requirements.txt              # Project dependencies
+└── main.py                       # Master orchestrator & CLI entry point
+```
+
+---
+
 ## 🚀 Installation & Usage
 
 ### 1. Clone the Repository & Install Dependencies
@@ -111,7 +140,7 @@ pip install -r requirements.txt
 ### 2. Interactive Console Mode (Recommended)
 Simply run the script with no arguments to launch the interactive audit console:
 ```bash
-python adcs_esc1_scanner.py
+python main.py
 ```
 From the interactive menu:
 - `[1]` List Domain Users & Identify Admin Targets
@@ -124,10 +153,10 @@ From the interactive menu:
 ### 3. CLI Mode (Automation / CI/CD)
 ```bash
 # Full audit with HTML report, BloodHound export, and automated remediation script generation
-python adcs_esc1_scanner.py -dc 192.168.181.129 -d invictus.local -u john -p 'Password123!' --list-users --fix --html adcs_report.html --bloodhound adcs_bloodhound.json
+python main.py -dc 192.168.181.129 -d invictus.local -u john -p 'Password123!' --list-users --fix --html adcs_report.html --bloodhound adcs_bloodhound.json
 
 # Secure LDAPS scan (Port 636)
-python adcs_esc1_scanner.py -dc 192.168.181.129 -d invictus.local -u john -p 'Password123!' --ssl
+python main.py -dc 192.168.181.129 -d invictus.local -u john -p 'Password123!' --ssl
 ```
 
 ### 4. Dockerized Execution

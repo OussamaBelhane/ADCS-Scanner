@@ -1,7 +1,7 @@
 import struct
 import uuid
 import pytest
-from adcs_esc1_scanner import (
+from core import (
     check_esc1,
     parse_sid,
     resolve_sid_name,

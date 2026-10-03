@@ -18,5 +18,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set default entrypoint
-ENTRYPOINT ["python", "adcs_esc1_scanner.py"]
+ENTRYPOINT ["python", "main.py"]
 CMD ["--help"]
